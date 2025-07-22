@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Etch-a-Sketch Drawing</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #f8f8f8;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      background: white;
+      border: 2px solid #ccc;
+      margin: auto;
+      position: absolute;
+      top: 0; bottom: 0; left: 0; right: 0;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .shake {
+      animation: shake 0.3s;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(2px, 2px) rotate(0deg); }
+      25% { transform: translate(-2px, 3px) rotate(-2deg); }
+      50% { transform: translate(2px, -2px) rotate(1deg); }
+      75% { transform: translate(-1px, 2px) rotate(-1deg); }
+      100% { transform: translate(1px, -1px) rotate(1deg); }
+    }
+
+    .instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-family: sans-serif;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+<div class="instructions">
+  Draw with arrow keys or mouse. Press "C" to clear.
+</div>
+
+<canvas id="drawCanvas" width="800" height="500"></canvas>
+
+<script>
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let x = canvas.width / 2;
+  let y = canvas.height / 2;
+  const step = 10;
+  let hue = 0;
+
+  function setStrokeStyle() {
+    ctx.strokeStyle = `hsl(${hue}, 100%, 40%)`;
+    hue = (hue + 2) % 360;
+  }
+
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  setStrokeStyle();
+
+  function drawWithKeys(direction) {
+    switch(direction) {
+      case 'ArrowUp': y -= step; break;
+      case 'ArrowDown': y += step; break;
+      case 'ArrowLeft': x -= step; break;
+      case 'ArrowRight': x += step; break;
+      default: return;
+    }
+    ctx.lineTo(x, y);
+    setStrokeStyle();
+    ctx.stroke();
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      drawWithKeys(e.key);
+    }
+
+    if (e.key.toLowerCase() === 'c') {
+      canvas.classList.add('shake');
+      setTimeout(() => canvas.classList.remove('shake'), 300);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+  });
+
+  // Mouse Drawing
+  let isDrawing = false;
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    x = e.offsetX;
+    y = e.offsetY;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
+    x = e.offsetX;
+    y = e.offsetY;
+    ctx.lineTo(x, y);
+    setStrokeStyle();
+    ctx.stroke();
+  });
+
+  canvas.addEventListener('mouseup', () => isDrawing = false);
+  canvas.addEventListener('mouseleave', () => isDrawing = false);
+</script>
+
+</body>
+</html>
